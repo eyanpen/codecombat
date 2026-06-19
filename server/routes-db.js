@@ -59,6 +59,28 @@ function getCollection (urlName) {
   return getDb().collection(mongoName)
 }
 
+// GET /db/:collection/names — batch lookup by ids
+router.get('/:collection/names', async (req, res) => {
+  try {
+    const col = getCollection(req.params.collection)
+    const ids = req.query.ids || req.query['ids[]'] || []
+    const idList = Array.isArray(ids) ? ids : [ids]
+    const query = {
+      $or: [
+        { original: { $in: idList } },
+        { _id: { $in: idList } },
+      ],
+    }
+    const docs = await col.find(query).toArray()
+    // Return as object keyed by original
+    const result = {}
+    docs.forEach(d => { result[d.original || d._id] = d })
+    res.json(result)
+  } catch (e) {
+    res.status(500).json({ message: e.message })
+  }
+})
+
 // GET /db/:collection — list/query
 router.get('/:collection', async (req, res) => {
   try {
@@ -79,7 +101,10 @@ router.get('/:collection', async (req, res) => {
     }
 
     // Support simple equality filters from query params
-    const reserved = ['project', 'limit', 'skip', 'sort']
+    const reserved = ['project', 'limit', 'skip', 'sort', 'view']
+    if (req.query.view === 'heroes' && req.params.collection === 'thang.type') {
+      query.heroClass = { $exists: true }
+    }
     for (const [k, v] of Object.entries(req.query)) {
       if (!reserved.includes(k)) {
         query[k] = v
@@ -187,11 +212,11 @@ router.patch('/:collection/:id', async (req, res) => {
 
     const filter = ObjectId.isValid(id) && String(new ObjectId(id)) === id
       ? { _id: new ObjectId(id) }
-      : { slug: id }
+      : { _id: id }
 
-    const result = await col.findOneAndUpdate(filter, { $set: update }, { returnDocument: 'after' })
-    if (!result.value && !result._id) return res.status(404).json({ message: 'Not found' })
-    res.json(result.value || result)
+    const result = await col.findOneAndUpdate(filter, { $set: update }, { returnDocument: 'after', upsert: true })
+    const doc = result.value || result
+    res.json(doc._id ? doc : { _id: id, ...update })
   } catch (e) {
     res.status(500).json({ message: e.message })
   }

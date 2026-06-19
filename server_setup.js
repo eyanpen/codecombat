@@ -219,6 +219,31 @@ exports.setupMiddleware = function (app) {
     app.use('/user-data', userDataRoutes)
     app.use('/auth', authRoutes)
     app.use('/db', dbRoutes)
+
+    // Serve /file/* from local static assets (fallback: local placeholders)
+    app.get('/file/*', (req, res, next) => {
+      const localPath = path.join(publicPath, req.params[0])
+      if (require('fs').existsSync(localPath)) {
+        return res.sendFile(localPath)
+      }
+      // Return appropriate local placeholder based on request type
+      const reqPath = req.params[0]
+      let placeholder
+      if (reqPath.includes('Map') || reqPath.includes('campaign')) {
+        placeholder = path.join(publicPath, 'images/pages/courses/banners/dungeon-heroes.png')
+      } else if (reqPath.includes('portrait')) {
+        placeholder = path.join(publicPath, 'images/pages/play/modal/captain.png')
+      } else {
+        placeholder = path.join(publicPath, 'images/pages/play/modal/captain.png')
+      }
+      if (require('fs').existsSync(placeholder)) {
+        return res.sendFile(placeholder)
+      }
+      // Final fallback: 1x1 transparent PNG
+      const buf = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQI12NgAAIABQABNjN9GQAAAABJRU5ErkJggg==', 'base64')
+      res.set('Content-Type', 'image/png')
+      res.send(buf)
+    })
   }
 
   setupCountryRedirectMiddleware(app, 'china', config.chinaDomain)
