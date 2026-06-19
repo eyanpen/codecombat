@@ -38,6 +38,10 @@ config.chinaInfra = process.env.COCO_CHINA_INFRASTRUCTURE || sassFalse
 
 config.port = process.env.COCO_PORT || process.env.COCO_NODE_PORT || process.env.PORT || 3000
 
+// MongoDB connection (used in non-proxy mode)
+config.mongoUrl = process.env.COCO_MONGO_URL || 'mongodb://localhost:27017'
+config.mongoDb = process.env.COCO_MONGO_DB || 'coco'
+
 if (config.unittest) {
   config.port += 1
 }

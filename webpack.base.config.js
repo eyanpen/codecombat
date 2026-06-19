@@ -269,7 +269,8 @@ module.exports = (env) => {
       ],
       alias: { // Replace Backbone's underscore with lodash
         'underscore': 'lodash',
-        'ace-builds': path.resolve(__dirname, 'bower_components/ace-builds') //y-ace requires
+        'ace-builds': path.resolve(__dirname, 'bower_components/ace-builds'), //y-ace requires
+        '@stripe/stripe-js': path.resolve(__dirname, 'app/lib/stripe-stub.js'),
       },
       // https://github.com/facebook/create-react-app/issues/11756#issuecomment-1047253186
       fallback: {
