@@ -22,8 +22,8 @@ function createAnonymousUser () {
     testGroupNumber: Math.floor(Math.random() * 256),
     dateCreated: new Date().toISOString(),
     points: 0,
-    volume: 1,
-    music: true,
+    volume: 0,
+    music: false,
     activity: {},
   }
 }
